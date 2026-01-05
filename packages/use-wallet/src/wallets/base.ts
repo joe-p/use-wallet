@@ -12,7 +12,7 @@ import type {
   WalletId,
   WalletMetadata
 } from 'src/wallets/types'
-
+import type { Transaction } from '@algorandfoundation/algokit-utils/transact'
 interface WalletConstructorType {
   new (...args: any[]): BaseWallet
   defaultMetadata: WalletMetadata
@@ -69,13 +69,13 @@ export abstract class BaseWallet {
     })
   }
 
-  public abstract signTransactions<T extends algosdk.Transaction[] | Uint8Array[]>(
+  public abstract signTransactions<T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]>
 
   public transactionSigner = async (
-    txnGroup: algosdk.Transaction[],
+    txnGroup: algosdk.Transaction[] | Transaction[],
     indexesToSign: number[]
   ): Promise<Uint8Array[]> => {
     const signTxnsResult = await this.signTransactions(txnGroup, indexesToSign)

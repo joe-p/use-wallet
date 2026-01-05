@@ -13,6 +13,12 @@ import { MnemonicWallet } from './wallets/mnemonic'
 import { PeraWallet } from './wallets/pera'
 import { WalletConnect } from './wallets/walletconnect'
 import { W3Wallet } from './wallets/w3wallet'
+import {
+  decodeTransaction,
+  encodeTransaction,
+  encodeTransactionRaw,
+  Transaction
+} from '@algorandfoundation/algokit-utils/transact'
 
 export function createWalletMap(): WalletMap {
   return {
@@ -98,6 +104,18 @@ export function isTransaction(item: any): item is algosdk.Transaction {
     'sender' in item &&
     (item.sender instanceof algosdk.Address || typeof item.sender === 'string')
   )
+}
+
+export function utilsTxnToSdk(txn: Transaction): algosdk.Transaction {
+  return algosdk.decodeUnsignedTransaction(encodeTransactionRaw(txn))
+}
+
+export function isAlgokitTxnGroup(txnGroup: any): txnGroup is Transaction[] {
+  if (!Array.isArray(txnGroup) || txnGroup.length === 0) {
+    return false
+  }
+
+  return txnGroup[0] instanceof Transaction
 }
 
 export function isTransactionArray(

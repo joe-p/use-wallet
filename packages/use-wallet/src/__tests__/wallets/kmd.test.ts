@@ -1,3 +1,4 @@
+import { Transaction, decodeTransaction } from '@algorandfoundation/algokit-utils/transact'
 import { Store } from '@tanstack/store'
 import algosdk from 'algosdk'
 import { logger } from 'src/logger'
@@ -451,6 +452,51 @@ describe('KmdWallet', () => {
 
       expect(global.prompt).toHaveBeenCalledTimes(0)
       expect(mockKmd.initWalletHandle).toHaveBeenCalledWith(mockWallet.id, customPassword)
+    })
+  })
+
+  describe('utils v10', () => {
+    it('utils v10 Transaction should be signable', async () => {
+      // Connected accounts
+      const connectedAcct1 = '7ZUECA7HFLZTXENRV24SHLU4AVPUTMTTDUFUBNBD64C73F3UHRTHAIOF6Q'
+      const connectedAcct2 = 'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A'
+
+      const makePayTxn = ({
+        amount = 1000,
+        sender = connectedAcct1,
+        receiver = connectedAcct2
+      }) => {
+        return new algosdk.Transaction({
+          type: algosdk.TransactionType.pay,
+          sender,
+          suggestedParams: {
+            fee: 0,
+            firstValid: 51,
+            lastValid: 61,
+            minFee: 1000,
+            genesisID: 'testnet-v1.0'
+          },
+          paymentParams: { receiver, amount }
+        })
+      }
+
+      // Transactions used in tests
+      const txn1 = makePayTxn({ amount: 1000 })
+      const txn2 = makePayTxn({ amount: 2000 })
+      const txn3 = makePayTxn({ amount: 3000 })
+      const txn4 = makePayTxn({ amount: 4000 })
+
+      const sdkGroup = algosdk.assignGroupID([txn1, txn2, txn3, txn4])
+
+      const utilsGroup: Transaction[] = sdkGroup.map((txn) => {
+        return decodeTransaction(algosdk.encodeMsgpack(txn))
+      })
+
+      const utilsResult = await wallet.signTransactions(utilsGroup)
+
+      const sdkResult = await wallet.signTransactions(sdkGroup)
+
+      expect(utilsResult).toEqual(sdkResult)
     })
   })
 })

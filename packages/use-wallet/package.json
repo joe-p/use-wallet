@@ -37,6 +37,7 @@
     "dist"
   ],
   "dependencies": {
+    "@algorandfoundation/algokit-utils": "10.0.0-alpha.29",
     "@tanstack/store": "0.7.2"
   },
   "devDependencies": {
