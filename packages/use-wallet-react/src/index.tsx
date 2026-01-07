@@ -11,6 +11,7 @@ import {
   type WalletMetadata
 } from '@txnlab/use-wallet'
 import algosdk from 'algosdk'
+import { Transaction } from '@algorandfoundation/algokit-utils/transact'
 import * as React from 'react'
 
 export * from '@txnlab/use-wallet'
@@ -185,7 +186,7 @@ export const useWallet = () => {
   const activeAccount = activeWallet?.activeAccount ?? null
   const activeAddress = activeAccount?.address ?? null
 
-  const signTransactions = <T extends algosdk.Transaction[] | Uint8Array[]>(
+  const signTransactions = <T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> => {
@@ -196,7 +197,7 @@ export const useWallet = () => {
   }
 
   const transactionSigner = (
-    txnGroup: algosdk.Transaction[],
+    txnGroup: algosdk.Transaction[] | Transaction[],
     indexesToSign: number[]
   ): Promise<Uint8Array[]> => {
     if (!activeBaseWallet) {

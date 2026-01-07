@@ -38,6 +38,7 @@
     "dist"
   ],
   "dependencies": {
+    "@algorandfoundation/algokit-utils": "10.0.0-alpha.29",
     "@tanstack/react-store": "0.7.3",
     "@txnlab/use-wallet": "workspace:*"
   },
@@ -53,8 +54,8 @@
   "peerDependencies": {
     "@blockshake/defly-connect": "^1.2.1",
     "@magic-ext/algorand": "^24.4.2",
-    "@walletconnect/modal": "^2.7.0",
     "@perawallet/connect": "^1.4.1",
+    "@walletconnect/modal": "^2.7.0",
     "@walletconnect/sign-client": "^2.21.8",
     "algosdk": "^3.0.0",
     "lute-connect": "^1.6.2",
