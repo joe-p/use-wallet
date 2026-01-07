@@ -1,11 +1,19 @@
 import algosdk from 'algosdk'
 import { WalletState, addWallet, setAccounts, setActiveWallet, type State } from 'src/store'
-import { compareAccounts, flattenTxnGroup, isSignedTxn, isTransactionArray } from 'src/utils'
+import {
+  compareAccounts,
+  flattenTxnGroup,
+  isAlgokitTxnGroup,
+  isSignedTxn,
+  isTransactionArray,
+  utilsTxnToSdk
+} from 'src/utils'
 import { BaseWallet } from 'src/wallets/base'
 import { WalletId } from 'src/wallets/types'
 import type { DeflyWalletConnect } from '@blockshake/defly-connect'
 import type { Store } from '@tanstack/store'
 import type { SignerTransaction, WalletAccount, WalletConstructor } from 'src/wallets/types'
+import { Transaction } from '@algorandfoundation/algokit-utils/transact'
 
 export interface DeflyWalletConnectOptions {
   bridge?: string
@@ -223,7 +231,7 @@ export class DeflyWallet extends BaseWallet {
     return txnsToSign
   }
 
-  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[]>(
+  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> => {
@@ -232,7 +240,10 @@ export class DeflyWallet extends BaseWallet {
       let txnsToSign: SignerTransaction[] = []
 
       // Determine type and process transactions for signing
-      if (isTransactionArray(txnGroup)) {
+      if (isAlgokitTxnGroup(txnGroup)) {
+        const flatTxns = flattenTxnGroup(txnGroup as Transaction[]).map(utilsTxnToSdk)
+        txnsToSign = this.processTxns(flatTxns, indexesToSign)
+      } else if (isTransactionArray(txnGroup)) {
         const flatTxns: algosdk.Transaction[] = flattenTxnGroup(txnGroup)
         txnsToSign = this.processTxns(flatTxns, indexesToSign)
       } else {

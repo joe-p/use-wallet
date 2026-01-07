@@ -10,17 +10,18 @@ import type {
   WalletConstructor,
   WalletId
 } from 'src/wallets/types'
+import { Transaction } from '@algorandfoundation/algokit-utils/transact'
 
 export type CustomProvider = {
   connect(args?: Record<string, any>): Promise<WalletAccount[]>
   disconnect?(): Promise<void>
   resumeSession?(): Promise<WalletAccount[] | void>
-  signTransactions?<T extends algosdk.Transaction[] | Uint8Array[]>(
+  signTransactions?<T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]>
   transactionSigner?(
-    txnGroup: algosdk.Transaction[],
+    txnGroup: algosdk.Transaction[] | Transaction[],
     indexesToSign: number[]
   ): Promise<Uint8Array[]>
   signData?(data: string, metadata: SignMetadata): Promise<SignDataResponse>
@@ -146,7 +147,7 @@ export class CustomWallet extends BaseWallet {
     }
   }
 
-  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[]>(
+  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> => {
@@ -159,7 +160,7 @@ export class CustomWallet extends BaseWallet {
   }
 
   public transactionSigner = async (
-    txnGroup: algosdk.Transaction[],
+    txnGroup: algosdk.Transaction[] | Transaction[],
     indexesToSign: number[]
   ): Promise<Uint8Array[]> => {
     if (!this.provider.transactionSigner) {

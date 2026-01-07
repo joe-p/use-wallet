@@ -1,10 +1,17 @@
 import algosdk from 'algosdk'
 import { StorageAdapter } from 'src/storage'
 import { LOCAL_STORAGE_KEY, WalletState, addWallet, type State } from 'src/store'
-import { flattenTxnGroup, isSignedTxn, isTransactionArray } from 'src/utils'
+import {
+  flattenTxnGroup,
+  isAlgokitTxnGroup,
+  isSignedTxn,
+  isTransactionArray,
+  utilsTxnToSdk
+} from 'src/utils'
 import { BaseWallet } from 'src/wallets/base'
 import type { Store } from '@tanstack/store'
 import type { WalletAccount, WalletConstructor, WalletId } from 'src/wallets/types'
+import { Transaction } from '@algorandfoundation/algokit-utils/transact'
 
 interface MnemonicConstructor {
   persistToStorage?: boolean
@@ -218,7 +225,7 @@ export class MnemonicWallet extends BaseWallet {
     return txnsToSign
   }
 
-  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[]>(
+  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> => {
@@ -230,7 +237,10 @@ export class MnemonicWallet extends BaseWallet {
       let txnsToSign: algosdk.Transaction[] = []
 
       // Determine type and process transactions for signing
-      if (isTransactionArray(txnGroup)) {
+      if (isAlgokitTxnGroup(txnGroup)) {
+        const flatTxns = flattenTxnGroup(txnGroup as Transaction[]).map(utilsTxnToSdk)
+        txnsToSign = this.processTxns(flatTxns, indexesToSign)
+      } else if (isTransactionArray(txnGroup)) {
         const flatTxns: algosdk.Transaction[] = flattenTxnGroup(txnGroup)
         txnsToSign = this.processTxns(flatTxns, indexesToSign)
       } else {

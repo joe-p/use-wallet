@@ -4,8 +4,10 @@ import {
   base64ToByteArray,
   byteArrayToBase64,
   flattenTxnGroup,
+  isAlgokitTxnGroup,
   isSignedTxn,
-  isTransactionArray
+  isTransactionArray,
+  utilsTxnToSdk
 } from 'src/utils'
 import { BaseWallet } from 'src/wallets/base'
 import type { Store } from '@tanstack/store'
@@ -15,6 +17,7 @@ import type {
   WalletId,
   WalletTransaction
 } from 'src/wallets/types'
+import { Transaction } from '@algorandfoundation/algokit-utils/transact'
 
 export interface W3WalletProvider {
   isConnected: () => Promise<boolean>
@@ -172,7 +175,7 @@ export class W3Wallet extends BaseWallet {
     return txnsToSign
   }
 
-  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[]>(
+  public signTransactions = async <T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> => {
@@ -181,7 +184,10 @@ export class W3Wallet extends BaseWallet {
       let txnsToSign: WalletTransaction[] = []
 
       // Determine type and process transactions for signing
-      if (isTransactionArray(txnGroup)) {
+      if (isAlgokitTxnGroup(txnGroup)) {
+        const flatTxns = flattenTxnGroup(txnGroup as Transaction[]).map(utilsTxnToSdk)
+        txnsToSign = this.processTxns(flatTxns, indexesToSign)
+      } else if (isTransactionArray(txnGroup)) {
         const flatTxns: algosdk.Transaction[] = flattenTxnGroup(txnGroup)
         txnsToSign = this.processTxns(flatTxns, indexesToSign)
       } else {

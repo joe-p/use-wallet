@@ -1,7 +1,6 @@
 import algosdk from 'algosdk'
 import { WalletState, addWallet, type State } from 'src/store'
 import {
-  convertTxn,
   flattenTxnGroup,
   isAlgokitTxnGroup,
   isSignedTxn,

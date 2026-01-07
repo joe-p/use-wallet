@@ -5,12 +5,15 @@ import {
   byteArrayToBase64,
   compareAccounts,
   flattenTxnGroup,
+  isAlgokitTxnGroup,
   isSignedTxn,
-  isTransactionArray
+  isTransactionArray,
+  utilsTxnToSdk
 } from 'src/utils'
 import { BaseWallet } from 'src/wallets/base'
 import { WalletId, type WalletAccount, type WalletConstructor } from 'src/wallets/types'
 import type AVMWebProviderSDK from '@agoralabs-sh/avm-web-provider'
+import { Transaction } from '@algorandfoundation/algokit-utils/transact'
 
 export function isAVMWebProviderSDKError(error: any): error is AVMWebProviderSDK.BaseARC0027Error {
   return typeof error === 'object' && 'code' in error && 'message' in error
@@ -246,7 +249,7 @@ export abstract class AVMProvider extends BaseWallet {
     }
   }
 
-  public async signTransactions<T extends algosdk.Transaction[] | Uint8Array[]>(
+  public async signTransactions<T extends algosdk.Transaction[] | Uint8Array[] | Transaction>(
     txnGroup: T | T[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> {
@@ -255,7 +258,10 @@ export abstract class AVMProvider extends BaseWallet {
       let txnsToSign: AVMWebProviderSDK.IARC0001Transaction[] = []
 
       // Determine type and process transactions for signing
-      if (isTransactionArray(txnGroup)) {
+      if (isAlgokitTxnGroup(txnGroup)) {
+        const flatTxns = flattenTxnGroup(txnGroup as Transaction[]).map(utilsTxnToSdk)
+        txnsToSign = this.processTxns(flatTxns, indexesToSign)
+      } else if (isTransactionArray(txnGroup)) {
         const flatTxns: algosdk.Transaction[] = flattenTxnGroup(txnGroup)
         txnsToSign = this.processTxns(flatTxns, indexesToSign)
       } else {
